@@ -1,0 +1,21 @@
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const path = require('path');
+const Role = require('../models/Role');
+
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
+const test = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('Connected');
+        const role = await Role.findOne({ name: 'Admin' });
+        console.log('Role:', role);
+        process.exit(0);
+    } catch (err) {
+        console.error('Error:', err);
+        process.exit(1);
+    }
+};
+
+test();
