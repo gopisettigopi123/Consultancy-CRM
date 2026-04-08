@@ -3,10 +3,13 @@ const router = express.Router();
 const {
     getPermissions,
     createPermission,
+    deletePermission,
     getRoles,
     createRole,
     updateRole,
+    deleteRole,
     getUsers,
+    createUser,
     updateUserRole,
     deleteUser
 } = require('../controllers/userManagementController');
@@ -21,17 +24,22 @@ router.route('/permissions')
     .get(getPermissions)
     .post(createPermission);
 
+router.route('/permissions/:id')
+    .delete(deletePermission);
+
 // Roles
 router.route('/roles')
     .get(getRoles)
     .post(createRole);
 
 router.route('/roles/:id')
-    .put(updateRole);
+    .put(updateRole)
+    .delete(deleteRole);
 
 // Users
 router.route('/users')
-    .get(getUsers);
+    .get(getUsers)
+    .post(createUser);
 
 router.route('/users/:id')
     .delete(deleteUser);

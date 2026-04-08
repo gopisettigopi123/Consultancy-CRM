@@ -35,6 +35,10 @@ const permissionsData = [
     { name: 'View Mocks', slug: 'view_mocks', module: 'Training' },
     { name: 'Manage Mocks', slug: 'manage_mocks', module: 'Training' },
 
+    // HR
+    { name: 'View HR', slug: 'view_hr', module: 'HR' },
+    { name: 'Manage HR', slug: 'manage_hr', module: 'HR' },
+
     // User Management
     { name: 'Manage Users', slug: 'manage_users', module: 'Admin' },
     { name: 'Manage Roles', slug: 'manage_roles', module: 'Admin' },
@@ -57,27 +61,46 @@ const initDB = async () => {
         }
 
         // Helper to get permission IDs by slugs
-        const getPIds = (slugManager) => {
+        const getPIds = (slugArray) => {
             return createdPermissions
-                .filter(p => slugManager.includes(p.slug))
+                .filter(p => slugArray.includes(p.slug))
                 .map(p => p._id);
         };
 
         // 2. Create Roles
         console.log('Creating Roles...');
         
-        // Admin Role
+        // Super Admin Role
         console.log('Checking Admin Role...');
         let adminRole = await Role.findOne({ name: 'Admin' });
         if (!adminRole) {
             console.log('Creating Admin Role...');
             adminRole = await Role.create({
                 name: 'Admin',
-                description: 'Full system access',
+                description: 'Super Administrator - Full system access',
                 permissions: createdPermissions.map(p => p._id)
             });
         }
-        console.log('Admin Role Ready.');
+
+        // Admin Team Role (usually same as Admin or slightly restricted, let's give full for now as per "Admin Team")
+        let adminTeamRole = await Role.findOne({ name: 'Admin Team' });
+        if (!adminTeamRole) {
+            adminTeamRole = await Role.create({
+                name: 'Admin Team',
+                description: 'Administrative staff with full access',
+                permissions: createdPermissions.map(p => p._id)
+            });
+        }
+
+        // HR Team Role
+        let hrRole = await Role.findOne({ name: 'HR Team' });
+        if (!hrRole) {
+            hrRole = await Role.create({
+                name: 'HR Team',
+                description: 'Human Resources - Access to Candidates and HR modules',
+                permissions: getPIds(['view_dashboard', 'view_candidates', 'view_hr', 'manage_hr'])
+            });
+        }
 
         // Training Team Role
         let trainingRole = await Role.findOne({ name: 'Training Team' });

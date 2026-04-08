@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { loginUser } from '../services/api';
-import { MdEmail, MdLock, MdPeople } from 'react-icons/md';
+import { MdEmail, MdLock, MdPeople, MdVisibility, MdVisibilityOff } from 'react-icons/md';
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -72,18 +73,25 @@ const Login = () => {
 
           <div className="mb-4">
             <label className="form-label">Password</label>
-            <div className="search-wrapper">
+            <div className="search-wrapper position-relative">
               <MdLock className="search-icon" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 className="form-control"
                 placeholder="••••••••"
                 value={form.password}
                 onChange={handleChange}
                 required
-                style={{ width: '100%', paddingLeft: '36px' }}
+                style={{ width: '100%', paddingLeft: '36px', paddingRight: '40px' }}
               />
+              <div 
+                className="position-absolute end-0 top-50 translate-middle-y me-3 cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ zIndex: 5, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}
+              >
+                {showPassword ? <MdVisibilityOff size={20} /> : <MdVisibility size={20} />}
+              </div>
             </div>
           </div>
 

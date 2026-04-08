@@ -57,7 +57,15 @@ const navGroups = [
   {
     category: 'Admin Team',
     icon: <MdManageAccounts />,
-    roles: ['Admin'],
+    roles: ['Admin', 'Admin Team'],
+    items: [
+      { label: 'System Logs', to: '#', icon: <MdHistory /> },
+    ]
+  },
+   {
+    category: 'Account',
+    icon: <MdManageAccounts />,
+    roles: ['Admin', 'Admin Team'],
     items: [
       { label: 'System Logs', to: '#', icon: <MdHistory /> },
     ]

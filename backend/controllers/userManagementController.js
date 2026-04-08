@@ -113,15 +113,80 @@ exports.updateUserRole = async (req, res) => {
     }
 };
 
+// @desc    Create new user
+// @route   POST /api/user-management/users
+// @access  Private/Admin
+exports.createUser = async (req, res) => {
+    try {
+        const { name, email, password, role } = req.body;
+        
+        // Check if user already exists
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ success: false, error: 'User already exists' });
+        }
+
+        const user = await User.create({ name, email, password, role });
+        
+        const populatedUser = await User.findById(user._id).populate({
+            path: 'role',
+            populate: { path: 'permissions' }
+        });
+
+        res.status(201).json({ success: true, data: populatedUser });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};
+
 // @desc    Delete user
 // @route   DELETE /api/user-management/users/:id
 // @access  Private/Admin
 exports.deleteUser = async (req, res) => {
     try {
+        // Prevent self-deletion
+        if (req.params.id === req.user._id.toString()) {
+            return res.status(400).json({ success: false, error: 'You cannot delete your own account' });
+        }
+
         const user = await User.findByIdAndDelete(req.params.id);
         if (!user) {
             return res.status(404).json({ success: false, error: 'User not found' });
         }
+        res.json({ success: true, data: {} });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// @desc    Delete role
+// @route   DELETE /api/user-management/roles/:id
+// @access  Private/Admin
+exports.deleteRole = async (req, res) => {
+    try {
+        const role = await Role.findByIdAndDelete(req.params.id);
+        if (!role) {
+            return res.status(404).json({ success: false, error: 'Role not found' });
+        }
+        // Optional: Reset role for users who had this role
+        await User.updateMany({ role: req.params.id }, { role: null });
+        res.json({ success: true, data: {} });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// @desc    Delete permission
+// @route   DELETE /api/user-management/permissions/:id
+// @access  Private/Admin
+exports.deletePermission = async (req, res) => {
+    try {
+        const permission = await Permission.findByIdAndDelete(req.params.id);
+        if (!permission) {
+            return res.status(404).json({ success: false, error: 'Permission not found' });
+        }
+        // Remove permission from all roles
+        await Role.updateMany({}, { $pull: { permissions: req.params.id } });
         res.json({ success: true, data: {} });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });

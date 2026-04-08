@@ -561,6 +561,7 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 14px;
+  color: var(--text-primary);
 }
 
 .modal-header {
@@ -573,8 +574,8 @@ body {
   font-weight: 600;
 }
 
-.modal-header .btn-close {
-  filter: invert(1) brightness(0.6);
+[data-theme="dark"] .modal-header .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
 }
 
 .modal-body {
