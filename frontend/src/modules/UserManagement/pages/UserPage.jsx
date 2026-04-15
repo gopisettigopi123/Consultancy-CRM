@@ -219,7 +219,7 @@ const UserPage = () => {
             </Modal>
 
             {/* Update Role Modal */}
-            <Modal show={showRoleModal} onClose={() => setShowRoleModal(false)} title="Update User Role" size="sm">
+            <Modal show={showRoleModal} onClose={() => setShowRoleModal(false)} title="Update User Role" size="md">
                 <ModalBody>
                     <div className="mb-4 text-center">
                         <div className="avatar-placeholder mx-auto mb-3" style={{ width: 60, height: 60 }}>

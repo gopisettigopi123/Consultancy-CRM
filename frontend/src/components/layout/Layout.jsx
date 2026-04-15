@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
@@ -7,6 +7,15 @@ const Layout = ({ children }) => {
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
   const closeSidebar = () => setSidebarOpen(false);
+
+  useEffect(() => {
+    // Prevent background scrolling on mobile when sidebar is open
+    if (sidebarOpen && window.innerWidth <= 768) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [sidebarOpen]);
 
   return (
     <div className="app-layout">

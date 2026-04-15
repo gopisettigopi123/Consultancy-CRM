@@ -15,6 +15,14 @@ import Vendors from './pages/Vendors';
 import Submissions from './pages/Submissions';
 import UserPage from './modules/UserManagement/pages/UserPage';
 import PermissionPage from './modules/UserManagement/pages/PermissionPage';
+import ForgotPassword from './pages/ForgotPassword';
+import Employees from './pages/Employees';
+import Payroll from './pages/Payroll';
+import Attendance from './pages/Attendance';
+import SystemLogs from './pages/SystemLogs';
+import AccountPage from './pages/AccountPage';
+
+import NotFound from './pages/NotFound';
 
 const App = () => {
   return (
@@ -25,6 +33,7 @@ const App = () => {
           <Routes>
             {/* Public */}
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
   
             {/* Protected — All Roles */}
             <Route path="/" element={
@@ -71,6 +80,39 @@ const App = () => {
               </ProtectedRoute>
             } />
 
+            {/* HR Team */}
+            <Route path="/employees" element={
+              <ProtectedRoute roles={['Admin', 'HR Team']}>
+                <Layout><Employees /></Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/payroll" element={
+              <ProtectedRoute roles={['Admin', 'HR Team']}>
+                <Layout><Payroll /></Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/attendance" element={
+              <ProtectedRoute roles={['Admin', 'HR Team']}>
+                <Layout><Attendance /></Layout>
+              </ProtectedRoute>
+            } />
+
+            {/* Admin Team */}
+            <Route path="/system-logs" element={
+              <ProtectedRoute roles={['Admin', 'Admin Team']}>
+                <Layout><SystemLogs /></Layout>
+              </ProtectedRoute>
+            } />
+
+            {/* Account */}
+            <Route path="/balance" element={
+              <ProtectedRoute roles={['Admin', 'Account']}>
+                <Layout><AccountPage /></Layout>
+              </ProtectedRoute>
+            } />
+
             {/* User Management — Admin Only */}
             <Route path="/users" element={
               <ProtectedRoute roles={['Admin']}>
@@ -84,8 +126,12 @@ const App = () => {
               </ProtectedRoute>
             } />
   
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Fallback to 404 */}
+            <Route path="*" element={
+              <ProtectedRoute>
+                <Layout><NotFound /></Layout>
+              </ProtectedRoute>
+            } />
           </Routes>
         </Router>
       </AuthProvider>

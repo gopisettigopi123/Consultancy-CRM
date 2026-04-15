@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { loginUser } from '../services/api';
 import { MdEmail, MdLock, MdPeople, MdVisibility, MdVisibilityOff } from 'react-icons/md';
@@ -72,7 +72,12 @@ const Login = () => {
           </div>
 
           <div className="mb-4">
-            <label className="form-label">Password</label>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+                <label className="form-label mb-0">Password</label>
+                <Link to="/forgot-password" style={{ fontSize: '0.75rem', textDecoration: 'none', color: 'var(--primary)' }}>
+                    Forgot Password?
+                </Link>
+            </div>
             <div className="search-wrapper position-relative">
               <MdLock className="search-icon" />
               <input

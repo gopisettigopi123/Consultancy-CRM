@@ -1,143 +1,111 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useCompany } from '../../context/CompanyContext';
-import { 
-  MdDashboard, MdPeople, MdSchool, MdCampaign,
-  MdBusiness, MdSend, MdLogout, MdExpandMore, MdChevronRight, MdQuiz,
-  MdPerson, MdPayments, MdAssignmentInd, MdManageAccounts, MdSecurity, MdHistory
-} from 'react-icons/md';
-
-const navGroups = [
-  { 
-    label: 'Dashboard', 
-    icon: <MdDashboard />, 
-    to: '/', 
-    permission: 'view_dashboard'
-  },
-  {
-    category: 'Training Team',
-    icon: <MdSchool />,
-    permission: 'view_training',
-    items: [
-      { label: 'Training', to: '/training', icon: <MdSchool />, permission: 'view_training' },
-      { label: 'Mock Interviews', to: '/mocks', icon: <MdQuiz />, permission: 'view_mocks' },
-    ]
-  },
-  {
-    category: 'Marketing Team',
-    icon: <MdCampaign />,
-    permission: 'view_candidates',
-    items: [
-      { label: 'Candidates', to: '/candidates', icon: <MdPeople />, permission: 'view_candidates' },
-      { label: 'Vendors', to: '/vendors', icon: <MdBusiness />, permission: 'view_vendors' },
-      { label: 'Marketing', to: '/marketing', icon: <MdCampaign />, permission: 'view_marketing' },
-      { label: 'Submissions', to: '/submissions', icon: <MdSend />, permission: 'view_submissions' },
-    ]
-  },
-  {
-    category: 'HR Team',
-    icon: <MdPerson />,
-    permission: 'view_hr', // Planned
-    items: [
-      { label: 'Employees', to: '#', icon: <MdPerson /> },
-      { label: 'Payroll', to: '#', icon: <MdPayments /> },
-      { label: 'Attendance', to: '#', icon: <MdAssignmentInd /> },
-    ]
-  },
-  {
-    category: 'User Management',
-    icon: <MdManageAccounts />,
-    permission: 'manage_users',
-    items: [
-      { label: 'Users', to: '/users', icon: <MdPerson />, permission: 'manage_users' },
-      { label: 'Permission', to: '/permissions', icon: <MdSecurity />, permission: 'manage_roles' },
-    ]
-  },
-  {
-    category: 'Admin Team',
-    icon: <MdManageAccounts />,
-    roles: ['Admin', 'Admin Team'],
-    items: [
-      { label: 'System Logs', to: '#', icon: <MdHistory /> },
-    ]
-  },
-   {
-    category: 'Account',
-    icon: <MdManageAccounts />,
-    roles: ['Admin', 'Admin Team'],
-    items: [
-      { label: 'System Logs', to: '#', icon: <MdHistory /> },
-    ]
-  }
-];
+import { MdLogout, MdExpandMore, MdChevronRight } from 'react-icons/md';
+import { navGroups } from './sidebarConfig';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
-  const { activeCompany } = useCompany();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  // State to handle collapsible groups
-  const [expanded, setExpanded] = useState(() => {
-    const initial = {};
-    navGroups.forEach(group => {
-      if (group.items) {
-        const isActive = group.items.some(item => pathname === item.to);
-        initial[group.category] = isActive;
-      }
+  // Escape key support to close Sidebar overlay
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && window.innerWidth <= 768) onClose();
+    };
+    if (isOpen) document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
+  // Performance Optimization: Pre-calculate permission Set
+  const userPermissions = useMemo(() => {
+    if (!user || user.role?.name === 'Admin') return null; // Admin bypasses set
+    return new Set(user.role?.permissions?.map((p) => p.slug) || []);
+  }, [user]);
+
+  // Dynamic Menu Behavior: Expand correct group automatically on mount or route change
+  const [expanded, setExpanded] = useState({});
+
+  useEffect(() => {
+    setExpanded((prev) => {
+      const nextExpanded = { ...prev };
+      navGroups.forEach((group) => {
+        if (group.items && group.items.some((item) => pathname === item.to || pathname.startsWith(item.to + '/'))) {
+          nextExpanded[group.category] = true;
+        }
+      });
+      return nextExpanded;
     });
-    return initial;
-  });
+  }, [pathname]);
 
-  const toggleGroup = (category) => {
-    setExpanded(prev => ({ ...prev, [category]: !prev[category] }));
-  };
+  const toggleGroup = useCallback((category) => {
+    setExpanded((prev) => ({ ...prev, [category]: !prev[category] }));
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     navigate('/login');
-  };
+  }, [logout, navigate]);
 
-  const hasPermission = (permSlug) => {
-    if (!user || !user.role) return false;
-    if (user.role.name === 'Admin') return true;
-    if (!user.role.permissions) return false;
-    return user.role.permissions.some(p => p.slug === permSlug);
-  };
+  const handleMobileClose = useCallback(() => {
+    if (window.innerWidth <= 768) onClose();
+  }, [onClose]);
 
-  const allowedGroups = navGroups.filter(group => {
-    if (group.roles && group.roles.includes(user?.role?.name)) return true;
-    if (group.permission && hasPermission(group.permission)) return true;
-    if (group.items && group.items.some(item => item.permission ? hasPermission(item.permission) : true)) return true;
-    return false;
-  });
+  // Refactored Access Control Logic
+  const canAccess = useCallback(
+    (item) => {
+      if (!user) return false;
+      if (user.role?.name === 'Admin') return true;
+
+      // Group-level role override
+      if (item.roles && item.roles.includes(user.role?.name)) return true;
+
+      // Direct permission check
+      if (item.permission) return userPermissions?.has(item.permission);
+
+      // If it's a category, verify if ANY child item is accessible
+      if (item.items) {
+        return item.items.some((child) => child.permission ? userPermissions?.has(child.permission) : true);
+      }
+
+      return false; // Safest fallback
+    },
+    [user, userPermissions]
+  );
+
+  // Memoize visible groups
+  const allowedGroups = useMemo(() => navGroups.filter(canAccess), [canAccess]);
+
+  if (!user) return null; // Safety check
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-      <div className="sidebar-brand d-flex align-items-center" style={{ gap: "6px" }}>
+      <div className="sidebar-brand">
         <img
-          src="\dist\assets\logo.png"
-          alt="KNR Logo"
-          style={{ width: "150px", height: "150px", objectFit: "contain" ,marginTop:"10px"}}
+          src="/dist/assets/logo.png"
+          alt="CRM Logo"
+          className="sidebar-logo"
+          onError={(e) => { e.target.src = '/logo.png'; e.target.onerror = null; }}
         />
-
-        <span style={{ fontSize: "15px", color: "#aaa", lineHeight: "1" ,paddingBottom: "20px" }}>
-          Recruitment Management
-        </span>
+        <span className="sidebar-subtitle">Recruitment Management</span>
       </div>
 
       <nav className="sidebar-nav">
         <div className="nav-section-label">Main Menu</div>
-        {allowedGroups.map((group, idx) => {
-          // If it's a standalone link
+        {allowedGroups.map((group) => {
+          const groupKey = group.category || group.label;
+
+          // Render standalone menu link
           if (group.to) {
             return (
               <NavLink
-                key={group.to}
+                key={groupKey}
                 to={group.to}
                 end={group.to === '/'}
+                title={group.label}
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={handleMobileClose}
               >
                 {group.icon}
                 {group.label}
@@ -145,18 +113,18 @@ const Sidebar = ({ isOpen, onClose }) => {
             );
           }
 
-          // If it's a category
+          // Category with sub-items
           const isExpanded = expanded[group.category];
-          // Filter items based on permissions
-          const visibleItems = group.items.filter(item => item.permission ? hasPermission(item.permission) : true);
+          const visibleItems = group.items.filter((item) => (item.permission ? canAccess(item) : true));
 
-          if (visibleItems.length === 0 && !group.roles?.includes(user?.role?.name)) return null;
+          if (visibleItems.length === 0) return null;
 
           return (
-            <div key={idx} className="nav-group mb-1">
-              <div 
+            <div key={groupKey} className="nav-group mb-1">
+              <div
                 className={`nav-link group-header ${isExpanded ? 'group-active' : ''}`}
                 onClick={() => toggleGroup(group.category)}
+                title={group.category}
                 style={{ cursor: 'pointer', justifyContent: 'space-between' }}
               >
                 <div className="d-flex align-items-center gap-2">
@@ -165,14 +133,16 @@ const Sidebar = ({ isOpen, onClose }) => {
                 </div>
                 {isExpanded ? <MdExpandMore size={18} /> : <MdChevronRight size={18} />}
               </div>
-              
+
               {isExpanded && (
                 <div className="nav-sub-menu">
                   {visibleItems.map((item) => (
                     <NavLink
                       key={item.to}
                       to={item.to}
+                      title={item.label}
                       className={({ isActive }) => `nav-link sub-link ${isActive ? 'active' : ''}`}
+                      onClick={handleMobileClose}
                     >
                       {item.icon}
                       {item.label}
@@ -185,14 +155,14 @@ const Sidebar = ({ isOpen, onClose }) => {
         })}
       </nav>
 
-      <div className="sidebar-footer" style={{ padding: '12px 16px' }}>
-        <div className="user-badge mb-2 pb-2 border-bottom" style={{ borderColor: 'var(--border-color)', gap: '8px' }}>
+      <div className="sidebar-footer">
+        <div className="user-badge mb-2 pb-2 border-bottom border-secondary-subtle gap-2">
           <div className="user-avatar" style={{ width: 32, height: 32, fontSize: '0.9rem' }}>
-            {user?.name?.charAt(0).toUpperCase()}
+            {user.name?.charAt(0).toUpperCase()}
           </div>
-          <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{user?.name}</div>
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>{user?.role?.name || user?.role}</div>
+          <div className="sidebar-user-info cursor-pointer" title="Manage Profile" onClick={() => document.querySelector('.topbar-actions .user-badge')?.click()}>
+            <div className="sidebar-user-name">{user.name}</div>
+            <div className="sidebar-user-role">{user.role?.name || 'User'}</div>
           </div>
         </div>
         <button

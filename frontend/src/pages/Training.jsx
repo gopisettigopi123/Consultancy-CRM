@@ -112,7 +112,7 @@ const Training = () => {
       <Modal show={showModal} title={editing ? 'Edit Training Record' : 'Add Training Record'} onClose={() => setShowModal(false)}>
         <Form onSubmit={handleSave} className="crm-form">
           <ModalBody>
-            <Row className="g-3">
+            <Row className="g-2">
               <Input colMd={12} label="Candidate" type="select" required value={form.candidate} onChange={e => setForm({ ...form, candidate: e.target.value })} 
                      options={[{value: '', label: 'Select Candidate'}, ...candidates.map(c => ({value: c._id, label: `${c.fullName} (${c.phoneNumber || 'No phone'})`}))]} />
               

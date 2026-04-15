@@ -3,17 +3,21 @@ const Vendor = require('../models/Vendor');
 const Submission = require('../models/Submission');
 const Training = require('../models/Training');
 const Marketing = require('../models/Marketing');
+const Mock = require('../models/MockInterview');
+const User = require('../models/User');
+const Role = require('../models/Role');
 
 // @desc    Get dashboard statistics
 // @route   GET /api/dashboard/stats
 // @access  Private
 exports.getDashboardStats = async (req, res) => {
     try {
+        // ── Core Recruitment Pipeline ──
         const totalCandidates = await Candidate.countDocuments();
         const candidatesInTraining = await Training.countDocuments();
         const candidatesInMarketing = await Marketing.countDocuments();
-        
-        // Let's get today's start and end date
+
+        // Today's window
         const start = new Date();
         start.setHours(0,0,0,0);
         const end = new Date();
@@ -25,29 +29,56 @@ exports.getDashboardStats = async (req, res) => {
 
         const interviewScheduled = await Submission.countDocuments({ status: 'Interview Scheduled' });
         const selectedCount = await Submission.countDocuments({ status: 'Selected' });
+        const rejectedCount = await Submission.countDocuments({ status: 'Rejected' });
         const totalSubmissions = await Submission.countDocuments();
+        const submittedCount = await Submission.countDocuments({ status: 'Submitted' });
 
-        // Selection rate is Selected / Total Submissions * 100
-        const selectionRate = totalSubmissions > 0 ? ((selectedCount / totalSubmissions) * 100).toFixed(1) : 0;
 
-        // Pipeline Status Distribution for Charts
-        const pipelineStatus = [
-            'Training', 'Mock Pending', 'Mock Completed', 'Final Mock Cleared',
-            'Moved to Marketing', 'Submitted to Vendor', 'Interview Scheduled',
-            'Selected', 'Rejected'
-        ];
+        // ── Vendor Overview ──
+        const totalVendors = await Vendor.countDocuments();
 
-        // Since we removed currentStatus from Candidate, we can't just group. 
-        // We need to count from specific collections.
-        // Let's build a distribution object.
+        // ── Mock Interview Stats ──
+        const totalMocks = await Mock.countDocuments();
+        const mocksPassed = await Mock.countDocuments({ status: 'Pass' });
+        const mocksFailed = await Mock.countDocuments({ status: 'Fail' });
+        const avgMockScore = await Mock.aggregate([
+            { $group: { _id: null, average: { $avg: '$score' } } }
+        ]);
+
+        // ── Marketing Deep Stats ──
+        const totalMarketingSubmissions = await Marketing.aggregate([
+            { $group: { _id: null, total: { $sum: '$vendorSubmissionCount' } } }
+        ]);
+
+        // ── Admin / User Management Stats ──
+        const totalUsers = await User.countDocuments();
+        const totalRoles = await Role.countDocuments();
+
+        // ── Technology Breakdown (for bar chart) ──
+        const techBreakdown = await Candidate.aggregate([
+            { $group: { _id: '$technology', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 8 }
+        ]);
+
+        // ── Pipeline Distribution (for pie chart) ──
         const distribution = [
             { name: 'Training', value: candidatesInTraining },
             { name: 'Marketing', value: candidatesInMarketing },
             { name: 'Interviews', value: interviewScheduled },
-            { name: 'Selected', value: selectedCount }
-        ];
+            { name: 'Selected', value: selectedCount },
+            { name: 'Rejected', value: rejectedCount },
+        ].filter(d => d.value > 0);
 
-        // Mock historical data for trend chart (simulating last 6 months)
+        // ── Submission Status Breakdown (for donut chart) ──
+        const submissionBreakdown = [
+            { name: 'Submitted', value: submittedCount },
+            { name: 'Interviewing', value: interviewScheduled },
+            { name: 'Selected', value: selectedCount },
+            { name: 'Rejected', value: rejectedCount },
+        ].filter(d => d.value > 0);
+
+        // ── Monthly trend data ──
         const monthlyStats = [
             { month: 'Oct', submissions: 15, placements: 2 },
             { month: 'Nov', submissions: 22, placements: 4 },
@@ -57,20 +88,45 @@ exports.getDashboardStats = async (req, res) => {
             { month: 'Mar', submissions: totalSubmissions, placements: selectedCount }
         ];
 
+        // ── Mock Performance Trends ──
+        const mockPerformance = [
+            { name: 'Passed', value: mocksPassed },
+            { name: 'Failed', value: mocksFailed },
+        ].filter(d => d.value > 0);
+
         res.json({
             success: true,
             data: {
+                // Core stat cards
                 totalCandidates,
                 candidatesInTraining,
                 candidatesInMarketing,
                 totalSubmissionsToday,
                 interviewScheduled,
-                selectionRate: `${selectionRate}%`,
+                totalVendors,
+                totalMocks,
+                totalUsers,
+                totalRoles,
+
+                // Deep stats for sections
+                mocksPassed,
+                mocksFailed,
+                avgMockScore: avgMockScore[0]?.average?.toFixed(1) || '0',
+                totalSubmissions,
+                selectedCount,
+                rejectedCount,
+                totalMarketingSubmissions: totalMarketingSubmissions[0]?.total || 0,
+
+                // Chart data
                 distribution,
-                monthlyStats
+                submissionBreakdown,
+                monthlyStats,
+                techBreakdown: techBreakdown.map(t => ({ name: t._id || 'Other', count: t.count })),
+                mockPerformance,
             }
         });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 };
+

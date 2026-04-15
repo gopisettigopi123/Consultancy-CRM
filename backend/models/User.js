@@ -11,6 +11,10 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    phone: {
+        type: String,
+        default: '',
+    },
     password: {
         type: String,
         required: true,
@@ -20,14 +24,16 @@ const userSchema = new mongoose.Schema({
         ref: 'Role',
         required: true,
     },
+    resetPasswordOTP: String,
+    resetPasswordExpires: Date,
 }, {
     timestamps: true,
 });
 
 // Hash password before saving
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
     if (!this.isModified('password')) {
-        next();
+        return;
     }
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
