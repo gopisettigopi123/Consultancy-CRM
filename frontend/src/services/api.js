@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:5000/api',
+  // withCredentials: true,
 });
 
 // Attach JWT token to every request automatically
@@ -73,6 +74,7 @@ export const deleteVendor = (id) => API.delete(`/vendors/${id}`);
 export const getAllSubmissions = (params) => API.get('/submissions', { params });
 export const createSubmission = (data) => API.post('/submissions', data);
 export const updateSubmission = (id, data) => API.put(`/submissions/${id}`, data);
+export const getSubmissionsByCandidate = (id) => API.get(`/submissions/candidate/${id}`);
 
 // Dashboard
 export const getDashboardStats = () => API.get('/dashboard/stats');

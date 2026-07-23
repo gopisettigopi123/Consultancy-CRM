@@ -16,7 +16,12 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173', 'https://crm-frontend.vercel.app'], // Add your Vercel URL here
+    credentials: true
+}));
+
 
 // Static folder for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

@@ -35,3 +35,15 @@ exports.updateSubmission = async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 };
+
+exports.getSubmissionsByCandidate = async (req, res) => {
+    try {
+        const data = await Submission.find({ candidate: req.params.candidateId })
+            .populate('vendor', 'vendorName vendorCompany')
+            .sort({ submissionDate: -1 });
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+

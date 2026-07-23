@@ -11,6 +11,7 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Modal, { ModalBody, ModalFooter } from '../components/ui/Modal';
+import CandidateProfileDrawer from '../components/ui/CandidateProfileDrawer';
 import { copyToClipboard } from '../utils/clipboard';
 
 
@@ -102,6 +103,7 @@ const Candidates = () => {
   const [resumeFile, setResumeFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [selectedCandidateId, setSelectedCandidateId] = useState(null);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -186,7 +188,7 @@ const Candidates = () => {
   };
 
   const columns = useMemo(() => [
-    { header: 'Name', render: (c) => (<><div style={{fontWeight:600}}>{c.fullName}</div><div style={{fontSize:'0.75rem',color:'var(--text-secondary)'}}>{c.email}</div></>) },
+    { header: 'Name', render: (c) => (<div style={{cursor:'pointer'}} onClick={() => setSelectedCandidateId(c._id)}><div style={{fontWeight:600,color:'var(--primary)'}}>{c.fullName}</div><div style={{fontSize:'0.75rem',color:'var(--text-secondary)'}}>{c.email}</div></div>) },
     { header: 'Location', render: (c) => <Badge status="mock" label={c.location || '—'} className="badge-mock" /> },
     { header: 'Phone', accessor: 'phoneNumber' },
     { header: 'Technology', accessor: 'technology' },
@@ -281,6 +283,14 @@ const Candidates = () => {
           </ModalFooter>
         </Form>
       </Modal>
+
+      {/* Candidate Profile Drawer */}
+      {selectedCandidateId && (
+        <CandidateProfileDrawer
+          candidateId={selectedCandidateId}
+          onClose={() => setSelectedCandidateId(null)}
+        />
+      )}
     </div>
   );
 };

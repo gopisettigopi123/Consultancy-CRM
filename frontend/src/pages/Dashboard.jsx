@@ -15,6 +15,7 @@ import Badge from '../components/ui/Badge';
 import Table from '../components/ui/Table';
 import Button from '../components/ui/Button';
 import StatsChart from '../components/ui/StatsChart';
+import CandidateProfileDrawer from '../components/ui/CandidateProfileDrawer';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -29,6 +30,7 @@ const Dashboard = () => {
   const [results, setResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [selectedCandidateId, setSelectedCandidateId] = useState(null);
 
   useEffect(() => {
     getDashboardStats()
@@ -96,7 +98,7 @@ const Dashboard = () => {
   ];
 
   const resultsColumns = [
-    { header: 'Name', render: (c) => (<><div style={{fontWeight:600}}>{c.fullName}</div><div style={{fontSize:'0.72rem',color:'var(--text-secondary)'}}>{c.email}</div></>)},
+    { header: 'Name', render: (c) => (<div style={{cursor:'pointer'}} onClick={() => setSelectedCandidateId(c._id)}><div style={{fontWeight:600,color:'var(--primary)'}}>{c.fullName}</div><div style={{fontSize:'0.72rem',color:'var(--text-secondary)'}}>{c.email}</div></div>)},
     { header: 'Phone', accessor: 'phoneNumber' },
     { header: 'Technology', accessor: 'technology' },
     { header: 'Exp', render: (c) => `${c.experience} yr${c.experience !== 1 ? 's' : ''}` },
@@ -388,6 +390,14 @@ const Dashboard = () => {
           {/* ═══════ ROW 5: Pipeline Labels ═══════ */}
           
         </>
+      )}
+
+      {/* Candidate Profile Drawer */}
+      {selectedCandidateId && (
+        <CandidateProfileDrawer
+          candidateId={selectedCandidateId}
+          onClose={() => setSelectedCandidateId(null)}
+        />
       )}
     </div>
   );
