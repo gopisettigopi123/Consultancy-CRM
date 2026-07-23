@@ -18,7 +18,7 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    if (error.response && error.response.status === 401 && !error.config.url.includes('/auth/login')) {
       // Token expired or invalid — clear session and force login
       localStorage.removeItem('crm_token');
       localStorage.removeItem('crm_user');
