@@ -79,4 +79,10 @@ export const getSubmissionsByCandidate = (id) => API.get(`/submissions/candidate
 // Dashboard
 export const getDashboardStats = () => API.get('/dashboard/stats');
 
+// Payments
+export const getAllPayments = () => API.get('/payments');
+export const createPayment = (data) => API.post('/payments', data);
+export const updatePayment = (id, data) => API.put(`/payments/${id}`, data);
+export const deletePayment = (id) => API.delete(`/payments/${id}`);
+
 export default API;

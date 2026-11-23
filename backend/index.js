@@ -18,8 +18,8 @@ const app = express();
 app.use(express.json());
 // app.use(cors());
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://consultancy-crm-omega.vercel.app'], // Removed trailing slash
-    credentials: true
+    // origin: ['http://localhost:5173', 'https://consultancy-crm-omega.vercel.app'], // Removed trailing slash
+    // credentials: true
 }));
 
 
@@ -36,6 +36,7 @@ const vendorRoutes = require('./routes/vendorRoutes');
 const submissionRoutes = require('./routes/submissionRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const userManagementRoutes = require('./routes/userManagementRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 // Mount routers
 app.use('/api/auth', authRoutes);
@@ -47,6 +48,7 @@ app.use('/api/vendors', vendorRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/user-management', userManagementRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Error Handler Middleware
 app.use((err, req, res, next) => {

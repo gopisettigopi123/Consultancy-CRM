@@ -150,6 +150,26 @@ const run = async () => {
     await Submission.insertMany(submissionData);
     console.log(`✅ ${submissionData.length} Submissions seeded`);
 
+    // --- Payments ---
+    const CandidatePayment = require('./models/CandidatePayment');
+    await CandidatePayment.deleteMany({});
+    const today = new Date();
+    const getDate = (daysOffset) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() + daysOffset);
+        return d;
+    };
+
+    const paymentData = [
+        { candidate: candidates[0]._id, company: 'Tech Corp', amount: 15000, dueDate: getDate(2), status: 'Upcoming' },
+        { candidate: candidates[1]._id, company: 'Global Solutions', amount: 20000, dueDate: getDate(6), status: 'Upcoming' },
+        { candidate: candidates[2]._id, company: 'Innovate LLC', amount: 18000, dueDate: getDate(15), status: 'Upcoming' },
+        { candidate: candidates[3]._id, company: 'Data Systems', amount: 12000, dueDate: getDate(-2), status: 'Upcoming' },
+        { candidate: candidates[4]._id, company: 'Cloud Networks', amount: 22000, dueDate: getDate(-15), status: 'Paid' },
+    ];
+    await CandidatePayment.insertMany(paymentData);
+    console.log(`✅ ${paymentData.length} Payments seeded`);
+
     console.log('\n========================================');
     console.log('🎉 All mock data seeded successfully!');
     console.log('========================================');
