@@ -1,6 +1,8 @@
 const User = require('../models/User');
+const Role = require('../models/Role');
 const jwt = require('jsonwebtoken');
 const { sendResetOTP } = require('../utils/emailService');
+const { recordActivity } = require('./activityLogController');
 const bcrypt = require('bcryptjs');
 
 // Generate JWT
@@ -15,29 +17,44 @@ const generateToken = (id) => {
 // @access  Public (Should be Admin in production)
 exports.registerUser = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password } = req.body;
 
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.status(400).json({ success: false, error: 'User already exists' });
         }
 
+        // Always assign the default 'Training Team' Role ObjectId on public registration
+        const defaultRole = await Role.findOne({ name: 'Training Team' });
+        if (!defaultRole) {
+            return res.status(400).json({
+                success: false,
+                error: 'Default role not initialized. Run scripts/initUserManagement.js first.'
+            });
+        }
+
         const user = await User.create({
             name,
             email,
             password,
-            role: role || 'Training Team'
+            role: defaultRole._id
         });
 
-        if (user) {
+        const populatedUser = await User.findById(user._id).populate({
+            path: 'role',
+            populate: { path: 'permissions' }
+        });
+
+        if (populatedUser) {
+            await recordActivity(populatedUser._id, 'User Registered', `Registered account ${populatedUser.email}`);
             res.status(201).json({
                 success: true,
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-                role: user.role,
-                token: generateToken(user._id),
+                _id: populatedUser._id,
+                name: populatedUser.name,
+                email: populatedUser.email,
+                phone: populatedUser.phone,
+                role: populatedUser.role,
+                token: generateToken(populatedUser._id),
             });
         }
     } catch (error) {
@@ -60,6 +77,7 @@ exports.authUser = async (req, res) => {
         });
 
         if (user && (await user.matchPassword(password))) {
+            await recordActivity(user._id, 'Login Success', `Logged in as ${user.email}`);
             res.json({
                 success: true,
                 _id: user._id,

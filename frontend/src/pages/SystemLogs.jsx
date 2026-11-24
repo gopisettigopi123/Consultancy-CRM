@@ -1,56 +1,89 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import moment from 'moment';
 import Table from '../components/ui/Table';
 import Badge from '../components/ui/Badge';
-import { MdHistory, MdSecurity, MdInfo, MdWarning } from 'react-icons/md';
+import { MdHistory, MdRefresh } from 'react-icons/md';
+import { getActivityLogs } from '../services/api';
 
 const SystemLogs = () => {
-    const mockLogs = [
-        { id: 1024, user: 'Admin', action: 'Update Role', target: 'HR Manager', time: '2 mins ago', level: 'Info' },
-        { id: 1023, user: 'Gopi Krishna', action: 'Login Success', target: 'System', time: '15 mins ago', level: 'Info' },
-        { id: 1022, user: 'System', action: 'Failed Login Attempt', target: 'admin@knr.com', time: '1 hour ago', level: 'Warning' },
-        { id: 1021, user: 'Admin', action: 'Delete Candidate', target: 'ID #54228', time: '3 hours ago', level: 'Info' },
-        { id: 1020, user: 'Admin', action: 'Change Permission', target: 'Marketing Team', time: 'Yesterday', level: 'Critical' },
-    ];
+    const [logs, setLogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    const fetchLogs = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const res = await getActivityLogs();
+            if (res.data?.success) {
+                setLogs(res.data.data || []);
+            }
+        } catch (err) {
+            setError(err.response?.data?.error || 'Failed to load activity logs');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchLogs();
+    }, []);
 
     const columns = [
-        { header: 'Log ID', accessor: 'id' },
-        { 
-            header: 'User', 
-            render: (l) => <span className="fw-bold">{l.user}</span>
-        },
-        { 
-            header: 'Action / Event', 
+        {
+            header: 'User',
             render: (l) => (
                 <div>
-                    <div className="fw-600">{l.action}</div>
-                    <div className="text-muted-crm small">Target: {l.target}</div>
+                    <div className="fw-bold">{l.user?.name || 'System'}</div>
+                    {l.user?.email && <div className="text-muted-crm small">{l.user.email}</div>}
                 </div>
             )
         },
-        { header: 'Timestamp', accessor: 'time' },
-        { 
-            header: 'Level', 
-            render: (l) => {
-                const colors = { Info: 'Selected', Warning: 'Upcoming', Critical: 'Rejected' };
-                const icons = { Info: <MdInfo />, Warning: <MdWarning />, Critical: <MdSecurity /> };
-                return (
-                    <div className="d-flex align-items-center gap-1">
-                        <Badge status={colors[l.level]} label={l.level} />
-                    </div>
-                );
-            }
+        {
+            header: 'Action / Event',
+            render: (l) => (
+                <div>
+                    <div className="fw-600">{l.action}</div>
+                    <div className="text-muted-crm small">{l.details}</div>
+                </div>
+            )
+        },
+        {
+            header: 'Timestamp',
+            render: (l) => (
+                <span className="text-muted-crm small">
+                    {l.timestamp ? moment(l.timestamp).format('YYYY-MM-DD HH:mm:ss') : '-'}
+                </span>
+            )
+        },
+        {
+            header: 'Status',
+            render: () => <Badge status="Selected" label="Recorded" />
         }
     ];
 
     return (
         <div className="container-fluid py-4">
-            <div className="mb-4">
-                <h4 className="fw-bold mb-1"><MdHistory className="me-2 text-primary" />System Audit Logs</h4>
-                <p className="text-muted-crm">Trace all administrative actions and security events.</p>
+            <div className="mb-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 className="fw-bold mb-1"><MdHistory className="me-2 text-primary" />System Audit Logs</h4>
+                    <p className="text-muted-crm mb-0">Trace all administrative actions and security events.</p>
+                </div>
+                <button className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" onClick={fetchLogs} disabled={loading}>
+                    <MdRefresh /> Refresh
+                </button>
             </div>
-            
+
+            {error && <div className="alert alert-danger">{error}</div>}
+
             <div className="crm-card">
-                <Table columns={columns} data={mockLogs} keyField="id" />
+                {loading ? (
+                    <p className="p-3 text-muted-crm mb-0">Loading activity logs...</p>
+                ) : logs.length === 0 ? (
+                    <p className="p-3 text-muted-crm mb-0">No activity logs recorded yet.</p>
+                ) : (
+                    <Table columns={columns} data={logs} keyField="_id" />
+                )}
             </div>
         </div>
     );

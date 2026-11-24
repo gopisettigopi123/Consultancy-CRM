@@ -39,9 +39,14 @@ const permissionsData = [
     { name: 'View HR', slug: 'view_hr', module: 'HR' },
     { name: 'Manage HR', slug: 'manage_hr', module: 'HR' },
 
-    // User Management
+    // Account / Finance
+    { name: 'View Finance', slug: 'view_finance', module: 'Account' },
+    { name: 'Manage Finance', slug: 'manage_finance', module: 'Account' },
+
+    // User Management & Admin
     { name: 'Manage Users', slug: 'manage_users', module: 'Admin' },
     { name: 'Manage Roles', slug: 'manage_roles', module: 'Admin' },
+    { name: 'View System Logs', slug: 'view_logs', module: 'Admin' },
 ];
 
 const initDB = async () => {
@@ -119,6 +124,16 @@ const initDB = async () => {
                 name: 'Marketing Team',
                 description: 'Access to Marketing, Candidates, Vendors, and Submissions',
                 permissions: getPIds(['view_dashboard', 'view_candidates', 'manage_candidates', 'view_vendors', 'manage_vendors', 'view_marketing', 'manage_marketing', 'view_submissions', 'manage_submissions'])
+            });
+        }
+
+        // Account Role
+        let accountRole = await Role.findOne({ name: 'Account' });
+        if (!accountRole) {
+            accountRole = await Role.create({
+                name: 'Account',
+                description: 'Accounts and Finance - Access to Dashboard and Finance Details',
+                permissions: getPIds(['view_dashboard', 'view_finance', 'manage_finance'])
             });
         }
 

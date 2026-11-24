@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { MdLogout, MdExpandMore, MdChevronRight } from 'react-icons/md';
 import { navGroups } from './sidebarConfig';
+import { hasAccess } from '../../utils/accessControl';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
@@ -52,26 +53,19 @@ const Sidebar = ({ isOpen, onClose }) => {
     if (window.innerWidth <= 768) onClose();
   }, [onClose]);
 
-  // Refactored Access Control Logic
+  // Strict Fail-Closed Access Control Logic
   const canAccess = useCallback(
     (item) => {
       if (!user) return false;
-      if (user.role?.name === 'Admin') return true;
-
-      // Group-level role override
-      if (item.roles && item.roles.includes(user.role?.name)) return true;
-
-      // Direct permission check
-      if (item.permission) return userPermissions?.has(item.permission);
-
-      // If it's a category, verify if ANY child item is accessible
       if (item.items) {
-        return item.items.some((child) => child.permission ? userPermissions?.has(child.permission) : true);
+        return item.items.some((child) => canAccess(child));
       }
-
-      return false; // Safest fallback
+      if (!item.roles && !item.permission && !item.permissions) {
+        return false;
+      }
+      return hasAccess(user, item);
     },
-    [user, userPermissions]
+    [user]
   );
 
   // Memoize visible groups
@@ -115,7 +109,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           // Category with sub-items
           const isExpanded = expanded[group.category];
-          const visibleItems = group.items.filter((item) => (item.permission ? canAccess(item) : true));
+          const visibleItems = group.items.filter((item) => canAccess(item));
 
           if (visibleItems.length === 0) return null;
 

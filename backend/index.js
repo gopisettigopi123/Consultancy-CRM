@@ -37,6 +37,7 @@ const submissionRoutes = require('./routes/submissionRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const userManagementRoutes = require('./routes/userManagementRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const activityLogRoutes = require('./routes/activityLogRoutes');
 
 // Mount routers
 app.use('/api/auth', authRoutes);
@@ -49,6 +50,7 @@ app.use('/api/submissions', submissionRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/user-management', userManagementRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/activity-logs', activityLogRoutes);
 
 // Error Handler Middleware
 app.use((err, req, res, next) => {

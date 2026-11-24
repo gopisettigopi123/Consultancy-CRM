@@ -5,8 +5,12 @@ const {
     updatePayment,
     deletePayment
 } = require('../controllers/paymentController');
+const { protect, authorize } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
+
+router.use(protect);
+router.use(authorize('Admin', 'Account'));
 
 router
     .route('/')

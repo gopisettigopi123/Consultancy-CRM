@@ -35,93 +35,93 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
   
-            {/* Protected — All Roles */}
+            {/* Protected — Dashboard & Candidates */}
             <Route path="/" element={
-              <ProtectedRoute>
+              <ProtectedRoute permissions={['view_dashboard']}>
                 <Layout><Dashboard /></Layout>
               </ProtectedRoute>
             } />
   
             <Route path="/candidates" element={
-              <ProtectedRoute>
+              <ProtectedRoute permissions={['view_candidates', 'manage_candidates']}>
                 <Layout><Candidates /></Layout>
               </ProtectedRoute>
             } />
   
-            {/* Training Team + Admin */}
+            {/* Training */}
             <Route path="/training" element={
-              <ProtectedRoute roles={['Admin', 'Training Team']}>
+              <ProtectedRoute permissions={['view_training', 'manage_training']}>
                 <Layout><Training /></Layout>
               </ProtectedRoute>
             } />
   
             <Route path="/mocks" element={
-              <ProtectedRoute roles={['Admin', 'Training Team']}>
+              <ProtectedRoute permissions={['view_mocks', 'manage_mocks']}>
                 <Layout><Mocks /></Layout>
               </ProtectedRoute>
             } />
   
-            {/* Marketing Team + Admin */}
+            {/* Marketing */}
             <Route path="/marketing" element={
-              <ProtectedRoute roles={['Admin', 'Marketing Team']}>
+              <ProtectedRoute permissions={['view_marketing', 'manage_marketing']}>
                 <Layout><Marketing /></Layout>
               </ProtectedRoute>
             } />
   
             <Route path="/vendors" element={
-              <ProtectedRoute roles={['Admin', 'Marketing Team']}>
+              <ProtectedRoute permissions={['view_vendors', 'manage_vendors']}>
                 <Layout><Vendors /></Layout>
               </ProtectedRoute>
             } />
   
             <Route path="/submissions" element={
-              <ProtectedRoute roles={['Admin', 'Marketing Team']}>
+              <ProtectedRoute permissions={['view_submissions', 'manage_submissions']}>
                 <Layout><Submissions /></Layout>
               </ProtectedRoute>
             } />
 
-            {/* HR Team */}
+            {/* HR */}
             <Route path="/employees" element={
-              <ProtectedRoute roles={['Admin', 'HR Team']}>
+              <ProtectedRoute permissions={['view_hr', 'manage_hr']}>
                 <Layout><Employees /></Layout>
               </ProtectedRoute>
             } />
 
             <Route path="/payroll" element={
-              <ProtectedRoute roles={['Admin', 'HR Team']}>
+              <ProtectedRoute permissions={['view_hr', 'manage_hr']}>
                 <Layout><Payroll /></Layout>
               </ProtectedRoute>
             } />
 
             <Route path="/attendance" element={
-              <ProtectedRoute roles={['Admin', 'HR Team']}>
+              <ProtectedRoute permissions={['view_hr', 'manage_hr']}>
                 <Layout><Attendance /></Layout>
               </ProtectedRoute>
             } />
 
-            {/* Admin Team */}
+            {/* Admin Team / Logs */}
             <Route path="/system-logs" element={
-              <ProtectedRoute roles={['Admin', 'Admin Team']}>
+              <ProtectedRoute permissions={['view_logs']}>
                 <Layout><SystemLogs /></Layout>
               </ProtectedRoute>
             } />
 
             {/* Account */}
             <Route path="/balance" element={
-              <ProtectedRoute roles={['Admin', 'Account']}>
+              <ProtectedRoute permissions={['view_finance', 'manage_finance']}>
                 <Layout><AccountPage /></Layout>
               </ProtectedRoute>
             } />
 
-            {/* User Management — Admin Only */}
+            {/* User Management */}
             <Route path="/users" element={
-              <ProtectedRoute roles={['Admin']}>
+              <ProtectedRoute permissions={['manage_users']}>
                 <Layout><UserPage /></Layout>
               </ProtectedRoute>
             } />
 
             <Route path="/permissions" element={
-              <ProtectedRoute roles={['Admin']}>
+              <ProtectedRoute permissions={['manage_roles']}>
                 <Layout><PermissionPage /></Layout>
               </ProtectedRoute>
             } />
