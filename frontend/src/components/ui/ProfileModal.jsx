@@ -6,7 +6,7 @@ import { updateProfile, forgotPassword, resetPassword } from '../../services/api
 import { MdPerson, MdEmail, MdPhone, MdLock, MdVisibility, MdVisibilityOff, MdCheckCircle } from 'react-icons/md';
 
 const ProfileModal = ({ show, onClose }) => {
-    const { user, login } = useAuth();
+    const { user, updateUser } = useAuth();
     const [activeTab, setActiveTab] = useState('profile'); // 'profile' or 'security'
     
     // Profile State
@@ -21,9 +21,10 @@ const ProfileModal = ({ show, onClose }) => {
     const [securityMsg, setSecurityMsg] = useState({ type: '', text: '' });
     const [loading, setLoading] = useState(false);
 
+    // Only reset form when modal first opens — NOT when user object changes — avoids clearing success msg
     useEffect(() => {
-        if (show && user) {
-            setProfileForm({ name: user.name || '', phone: user.phone || '' });
+        if (show) {
+            setProfileForm({ name: user?.name || '', phone: user?.phone || '' });
             setActiveTab('profile');
             setSecurityStep(1);
             setOtp('');
@@ -31,7 +32,7 @@ const ProfileModal = ({ show, onClose }) => {
             setProfileMsg({ type: '', text: '' });
             setSecurityMsg({ type: '', text: '' });
         }
-    }, [show, user]);
+    }, [show]);
 
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
@@ -40,11 +41,9 @@ const ProfileModal = ({ show, onClose }) => {
         try {
             const { data } = await updateProfile(profileForm);
             if (data.success) {
-                setProfileMsg({ type: 'success', text: 'Profile updated successfully!' });
-                
-                // Update local context
-                const currentToken = localStorage.getItem('crm_token');
-                login(data, currentToken);
+                // Use updateUser instead of login to avoid triggering the auth token effect (which causes flicker)
+                updateUser({ name: data.name, phone: data.phone });
+                setProfileMsg({ type: 'success', text: '✓ Profile updated successfully!' });
             }
         } catch (error) {
             setProfileMsg({ type: 'danger', text: error.response?.data?.error || 'Failed to update profile.' });

@@ -30,8 +30,19 @@ export const AuthProvider = ({ children }) => {
   const login = (userData, authToken) => {
     localStorage.setItem('crm_token', authToken);
     localStorage.setItem('crm_user', JSON.stringify(userData));
-    setToken(authToken);
+    // Only update token state if the token actually changed, to avoid re-triggering the effect
+    setToken((prev) => (prev === authToken ? prev : authToken));
     setUser(userData);
+  };
+
+  /**
+   * Update the in-memory user AND localStorage without touching the token at all.
+   * Use this for profile updates so the loading/flicker cycle is never triggered.
+   */
+  const updateUser = (updatedUserData) => {
+    const merged = { ...JSON.parse(localStorage.getItem('crm_user') || '{}'), ...updatedUserData };
+    localStorage.setItem('crm_user', JSON.stringify(merged));
+    setUser(merged);
   };
 
   const logout = async () => {
@@ -48,7 +59,7 @@ export const AuthProvider = ({ children }) => {
 
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );
